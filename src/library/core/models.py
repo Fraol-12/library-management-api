@@ -2,11 +2,25 @@ from django.db import models
 #from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+
+isbn_validator = RegexValidator(
+    regex=r'^(?:\d{10}|\d{13})$',
+    message="ISBN must be 10 or 13 digits (no hyphens allowed here)",
+    code='invalid_isbn'
+)
 
 class Book(models.Model):
     title = models.CharField(max_length=255, blank=False, null=False)
     author = models.CharField(max_length=255, blank=False, null=False)
-    isbn = models.CharField(max_length=20, unique=True, blank=False, null=False)
+    isbn = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=False,
+        null=False,
+        validators=[isbn_validator],
+        help_text='ISBN-10 or ISBN-13 without hyphens'
+        )
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
