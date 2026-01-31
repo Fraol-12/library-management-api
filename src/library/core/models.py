@@ -32,6 +32,11 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author}"
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
         
     @property
     def is_available(self) -> bool:
