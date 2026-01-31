@@ -44,6 +44,41 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
 ]
 
+
+# ────────────────────────────────────────────────
+# REST FRAMEWORK SETTINGS
+# ────────────────────────────────────────────────
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',  # default: require login for everything
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+# ────────────────────────────────────────────────
+# SIMPLE JWT SETTINGS
+# ────────────────────────────────────────────────
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),        # short-lived access token
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),           # longer refresh token
+    'ROTATE_REFRESH_TOKENS': True,                         # issue new refresh on refresh
+    'BLACKLIST_AFTER_ROTATION': True,                      # old refresh becomes invalid
+
+    'AUTH_HEADER_TYPES': ('Bearer',),                      # Authorization: Bearer <token>
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+
+    # Optional: more secure signing (default is HS256)
+    'SIGNING_KEY': SECRET_KEY,                             # use Django secret for now
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
