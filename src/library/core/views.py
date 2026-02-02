@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated 
 from rest_framework.generics import RetrieveAPIView
 from django.contrib.auth.models import User
-from .serializers import UserSerializer  
+from .serializers import RegisterSerializer  
 from .permissions import IsAdminOrReadOnly, IsBorrowerOrAdminForLoan
 from core.models import Loan 
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -23,13 +25,15 @@ class MeView(APIView):
             'date_joined': user.date_joined.isoformat(),
         }
         return Response(data)
-
+'''
 
 class UserDetailView(RetrieveAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer 
+    serializer_class = RegisterSerializer 
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = 'username' 
+
+'''
 
 
 class TestPermissionView(APIView):
@@ -60,3 +64,22 @@ class TestLoanPermissionView(APIView):
         self.check_object_permissions(request, obj)
         return Response({'message:' 'You can modify this loan'})
 
+class RegisterView(APIView):
+    permission_classes = []
+    
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user':{
+                    'id': user.id,
+                    'username': user.username,
+                    'email':user.email,
+                }
+
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

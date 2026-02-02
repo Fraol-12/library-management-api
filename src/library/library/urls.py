@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from core.views import MeView, UserDetailView, TestPermissionView, TestLoanPermissionView
+from core.views import MeView, RegisterView, TestPermissionView, TestLoanPermissionView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -30,7 +30,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/me/', MeView.as_view(), name='user_me'),
-    path('api/users/<str:username>/', UserDetailView.as_view(), name='user_detail'),
     path('api/test-permissions/', TestPermissionView.as_view(), name='test-permissions'),
     path('api/test-loan-permissions/', TestLoanPermissionView.as_view(), name='test-loan-permissions'),
+    path('api/register/', RegisterView.as_view(), name='register'),
 ]
