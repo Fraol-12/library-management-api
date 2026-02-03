@@ -10,7 +10,7 @@ from core.models import Loan
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Book
-
+from django.db.models import Exists, OuterRef, Q
 
 
 class MeView(APIView):
@@ -93,9 +93,29 @@ class BookViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
-        queryset = Book.objects.all()
-        available_only = self.request.query_params.get("available", None)
-        if available_only == 'true':
-            queryset = [b for b in queryset if b.is_available]
-        return queryset    
+        queryset = super().get_queryset()
+
+        # Filter by availability using subquery (efficient)
+        available_only = self.request.query_params.get("available", 'false').lower() == 'true'
+        if available_only:
+            # Subquery: exclude books that have an active loan
+            has_active_loan = Loan.objects.filter(
+                book=OuterRef('pk'),
+                returned_at__isnull=True
+            )
+            queryset = queryset.filter(~Exists(has_active_loan))
+
+        # Optional: basic search by title or author
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | Q(author__icontains=search)
+            )
+
+        # Ordering (default + query param)
+        ordering = self.request.query_params.get('ordering', 'title')
+        if ordering in ['title', '-title', 'author', '-author', 'created_at', '-created_at']:
+            queryset = queryset.order_by(ordering)
+
+        return queryset  
             
