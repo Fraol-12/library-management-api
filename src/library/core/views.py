@@ -4,11 +4,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated 
 from rest_framework.generics import RetrieveAPIView
 from django.contrib.auth.models import User
-from .serializers import RegisterSerializer  
+from .serializers import RegisterSerializer, BookSerilaizer 
 from .permissions import IsAdminOrReadOnly, IsBorrowerOrAdminForLoan
 from core.models import Loan 
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
+from .models import Book
+
+
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -83,3 +86,16 @@ class RegisterView(APIView):
 
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerilaizer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Book.objects.all()
+        available_only = self.request.query_params.get("available", None)
+        if available_only == 'true':
+            queryset = [b for b in queryset if b.is_available]
+        return queryset    
+            
