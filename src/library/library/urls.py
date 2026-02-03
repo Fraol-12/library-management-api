@@ -16,13 +16,16 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
-from core.views import MeView, RegisterView, TestPermissionView, TestLoanPermissionView
+from django.urls import path, include
+from core.views import MeView, RegisterView, TestPermissionView, TestLoanPermissionView, BookViewSet
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
 
+router = DefaultRouter()
+router.register(r'books', BookViewSet, basename='books')
 
 
 urlpatterns = [
@@ -33,4 +36,6 @@ urlpatterns = [
     path('api/test-permissions/', TestPermissionView.as_view(), name='test-permissions'),
     path('api/test-loan-permissions/', TestLoanPermissionView.as_view(), name='test-loan-permissions'),
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/', include(router.urls)),
+
 ]
