@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.core import exceptions
 from django.contrib.auth.password_validation import validate_password 
+from .models import Book
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -39,3 +41,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.is_superuser = False
         user.save()
         return user
+    
+class BookSerilaizer(serializers.ModelSerializer):
+    is_available = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Book
+        fields = [
+            'id', 'title', 'author', 'isbn', 'description',
+            'created_at', 'updated_at', 'is_available'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'is_available']
