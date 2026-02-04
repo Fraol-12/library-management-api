@@ -1,17 +1,19 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated 
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.generics import RetrieveAPIView
 from django.contrib.auth.models import User
-from .serializers import RegisterSerializer, BookSerilaizer 
+from .serializers import RegisterSerializer, BookSerializer, LoanCreateSerializer, LoanDetailSerializer
 from .permissions import IsAdminOrReadOnly, IsBorrowerOrAdminForLoan
-from core.models import Loan 
+from core.models import Loan, Book 
 from rest_framework import status, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Book
 from django.db.models import Exists, OuterRef, Q
-
+from rest_framework.decorators import action
+from django.db import transaction
+from django.utils import timezone
+from rest_framework import serializers
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -89,7 +91,7 @@ class RegisterView(APIView):
     
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
-    serializer_class = BookSerilaizer
+    serializer_class = BookSerializer
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
@@ -119,3 +121,57 @@ class BookViewSet(viewsets.ModelViewSet):
 
         return queryset  
             
+class LoanViewSet(viewsets.ModelViewSet):
+    queryset = Loan.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return LoanCreateSerializer
+        return LoanDetailSerializer   # renamed to LoanDetailSerializer for clarity
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Loan.objects.all()
+        return Loan.objects.filter(user=self.request.user)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = LoanCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        book = serializer.validated_data['book']
+        due_date = serializer.validated_data['due_date']
+
+        if due_date <= timezone.now():
+            raise serializers.ValidationError({"due_date": "Due date must be in the future."})
+
+        if Loan.objects.filter(book=book, returned_at__isnull=True).exists():
+            raise serializers.ValidationError({"book": "This book is already borrowed."})
+
+        loan = serializer.save(user=request.user)
+
+        # ✅ IMPORTANT: respond with READ serializer
+        read_serializer = LoanDetailSerializer(loan)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+
+
+    @action(detail=True, methods=['patch'], permission_classes=[IsBorrowerOrAdminForLoan], url_path='return')
+    @transaction.atomic
+    def return_book(self, request, pk=None):
+        loan = self.get_object()
+
+        if loan.returned_at is not None:
+            return Response(
+                {"detail": "This book is already returned."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not (request.user == loan.user or request.user.is_staff):
+            return Response(
+                {"detail": "You can only return your own books (or be staff)."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        loan.returned_at = timezone.now()
+        loan.save()
+
+        return Response(LoanDetailSerializer(loan).data)
