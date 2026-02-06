@@ -9,6 +9,19 @@ from django.contrib.auth.models import User
 from core.models import Book, Loan
 
 
+@pytest.fixture
+def user_staff_book():
+    """Shared fixture: regular user, staff user, and one test book."""
+    user = User.objects.create_user(username="borrower", password="pass")
+    staff = User.objects.create_user(username="staff", password="pass", is_staff=True)
+    book = Book.objects.create(
+        title="Shared Test Book",
+        author="Test Author",
+        isbn="9781234567890"
+    )
+    return user, staff, book
+
+
 @pytest.mark.django_db
 class TestBookModel:
     def test_book_creation(self):
@@ -31,19 +44,8 @@ class TestBookModel:
 
 @pytest.mark.django_db
 class TestLoanDomainRules:
-    @pytest.fixture
-    def setup(self):
-        self.user = User.objects.create_user(username="borrower", password="pass")
-        self.staff = User.objects.create_user(username="staff", password="pass", is_staff=True)
-        self.book = Book.objects.create(
-            title="Test Book",
-            author="Test",
-            isbn="9781234567890"
-        )
-        return self.user, self.staff, self.book
-
-    def test_borrow_success_and_availability_flip(self, setup):
-        user, _, book = setup
+    def test_borrow_success_and_availability_flip(self, user_staff_book):
+        user, staff, book = user_staff_book
         loan = Loan.objects.create(
             user=user,
             book=book,
@@ -52,8 +54,8 @@ class TestLoanDomainRules:
         assert loan.is_active is True
         assert book.is_available is False
 
-    def test_double_borrow_rejected_by_constraint(self, setup):
-        user, _, book = setup
+    def test_double_borrow_rejected_by_constraint(self, user_staff_book):
+        user, staff, book = user_staff_book
         Loan.objects.create(
             user=user,
             book=book,
@@ -66,8 +68,8 @@ class TestLoanDomainRules:
                 due_date=timezone.now() + timedelta(days=14)
             )
 
-    def test_return_resets_availability(self, setup):
-        user, _, book = setup
+    def test_return_resets_availability(self, user_staff_book):
+        user, staff, book = user_staff_book
         loan = Loan.objects.create(
             user=user,
             book=book,
@@ -114,3 +116,67 @@ class TestLoanAPI:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["is_active"] is True
         assert "id" in response.data
+
+    def test_borrow_blocked_if_overdue(self, user_staff_book, regular_user):
+        user, client = regular_user   # ← use the authenticated client!
+        _, staff, book = user_staff_book
+        overdue_book = Book.objects.create(title="Overdue", author="Old", isbn="9999999999999")
+        overdue_loan = Loan(
+            user=user,
+            book=overdue_book,
+            borrowed_at=timezone.now() - timedelta(days=2),
+            due_date=timezone.now() - timedelta(days=1)
+        )
+        overdue_loan.save(force_insert=True)  # skip clean()
+        
+        response = client.post("/api/loans/", {"book": book.id, "due_date": "2026-03-20"})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "overdue" in str(response.data).lower()
+
+    def test_max_loans_limit(self, user_staff_book, regular_user):
+        user, client = regular_user
+        _, staff, book = user_staff_book
+        # Create 5 active loans
+        for i in range(5):
+            other_book = Book.objects.create(
+                title=f"Book {i}",
+                author="Test",
+                isbn=f"978000000000{i}"
+            )
+            Loan.objects.create(
+                user=user,
+                book=other_book,
+                due_date=timezone.now() + timedelta(days=14)
+            )
+        response = client.post("/api/loans/", {"book": book.id, "due_date": "2026-03-20"})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "maximum" in str(response.data).lower() or "5" in str(response.data)
+
+
+@pytest.mark.django_db
+class TestPermissions:
+    @pytest.fixture
+    def client(self):
+        return APIClient()
+
+    @pytest.fixture
+    def regular_client(self):
+        user = User.objects.create_user("regular", password="pass")
+        client = APIClient()
+        client.force_authenticate(user)
+        return client
+
+    @pytest.fixture
+    def staff_client(self):
+        user = User.objects.create_user("staff", password="pass", is_staff=True)
+        client = APIClient()
+        client.force_authenticate(user)
+        return client
+
+    def test_create_book_staff_only(self, regular_client, staff_client):
+        data = {"title": "Test", "author": "Test", "isbn": "9781234567890"}
+        response = regular_client.post("/api/books/", data)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+        response = staff_client.post("/api/books/", data)
+        assert response.status_code == status.HTTP_201_CREATED
