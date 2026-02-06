@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
-
+import dj_database_url
 from datetime import timedelta
 from .base import *
 
@@ -63,6 +63,11 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
     "NON_FIELD_ERRORS_KEY": "detail",
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        # Comment out or remove BrowsableAPIRenderer in production/dev
+        # 'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
 }
 
 # ────────────────────────────────────────────────
@@ -114,11 +119,13 @@ WSGI_APPLICATION = "library.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Use DATABASE_URL env var if set, fallback to SQLite for local dev
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "data/db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///data/db.sqlite3',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 

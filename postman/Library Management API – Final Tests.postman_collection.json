@@ -1,9 +1,10 @@
 {
   "info": {
     "_postman_id": "1e7bd711-13d6-4979-aff6-1c35b6b2c0eb",
-    "name": "Library Management API – Final Tests (Fixed)",
+    "name": "Library Management API – Final Tests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "48970502"
+    "_exporter_id": "48970502",
+    "_collection_link": "https://fraolm41-5506118.postman.co/workspace/Django-DRF-%E2%80%93-Books-API~8c108484-f44e-4350-9f9c-4edd1212fd4b/collection/48970502-1e7bd711-13d6-4979-aff6-1c35b6b2c0eb?action=share&source=collection_link&creator=48970502"
   },
   "item": [
     {
@@ -26,10 +27,23 @@
               "port": "8000",
               "path": ["api","register"]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.environment.set(\"access_token\", data.access);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
@@ -46,19 +60,7 @@
               "path": ["api","token"]
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Save access_token to environment",
-                  "const data = pm.response.json();",
-                  "pm.environment.set('access_token', data.access);"
-                ]
-              }
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -76,9 +78,10 @@
               "host": ["127","0","0","1"],
               "port": "8000",
               "path": ["api","books"],
-              "query": [{ "key": "available", "value": "true" }]
+              "query": [{"key":"available","value":"true"}]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Create Book (Staff only)",
@@ -98,19 +101,7 @@
               "path": ["api","books"]
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Auto-save book_id to environment",
-                  "const data = pm.response.json();",
-                  "pm.environment.set('book_id', data.id);"
-                ]
-              }
-            }
-          ]
+          "response": []
         },
         {
           "name": "Retrieve Book Details",
@@ -118,13 +109,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://127.0.0.1:8000/api/books/{{book_id}}/",
+              "raw": "http://127.0.0.1:8000/api/books/<book-id>/",
               "protocol": "http",
               "host": ["127","0","0","1"],
               "port": "8000",
-              "path": ["api","books","{{book_id}}"]
+              "path": ["api","books","<book-id>"]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Update Book (Staff only)",
@@ -137,27 +129,30 @@
               "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "http://127.0.0.1:8000/api/books/{{book_id}}/",
+              "raw": "http://127.0.0.1:8000/api/books/<book-id>/",
               "protocol": "http",
               "host": ["127","0","0","1"],
               "port": "8000",
-              "path": ["api","books","{{book_id}}"]
+              "path": ["api","books","<book-id>"]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Delete Book (Staff only)",
           "request": {
             "method": "DELETE",
             "header": [],
+            "body": { "mode": "raw","raw": "" },
             "url": {
-              "raw": "http://127.0.0.1:8000/api/books/{{book_id}}/",
+              "raw": "http://127.0.0.1:8000/api/books/<book-id>/",
               "protocol": "http",
               "host": ["127","0","0","1"],
               "port": "8000",
-              "path": ["api","books","{{book_id}}"]
+              "path": ["api","books","<book-id>"]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -171,7 +166,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{ \"book\": {{book_id}}, \"due_date\": \"YYYY-MM-DD\" }",
+              "raw": "{ \"book\": <book_id>, \"due_date\": \"YYYY-MM-DD\" }",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -182,19 +177,7 @@
               "path": ["api","loans"]
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Auto-save loan_id to environment",
-                  "const data = pm.response.json();",
-                  "pm.environment.set('loan_id', data.id);"
-                ]
-              }
-            }
-          ]
+          "response": []
         },
         {
           "name": "List My Active Loans",
@@ -208,7 +191,8 @@
               "port": "8000",
               "path": ["api","loans","my-active"]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Return a Book",
@@ -216,13 +200,14 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "http://127.0.0.1:8000/api/loans/{{loan_id}}/return/",
+              "raw": "http://127.0.0.1:8000/api/loans/<loan_id>/return/",
               "protocol": "http",
               "host": ["127","0","0","1"],
               "port": "8000",
-              "path": ["api","loans","{{loan_id}}","return"]
+              "path": ["api","loans","<loan_id>","return"]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "List All Loans (Staff only)",
@@ -236,7 +221,8 @@
               "port": "8000",
               "path": ["api","loans"]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -245,6 +231,16 @@
       "item": [
         {
           "name": "Get My Profile",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{access_token}}",
+                "type": "string"
+              }
+            ]
+          },
           "request": {
             "method": "GET",
             "header": [],
@@ -255,24 +251,10 @@
               "port": "8000",
               "path": ["api","me"]
             }
-          }
+          },
+          "response": []
         }
       ]
     }
-  ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{access_token}}",
-        "type": "string"
-      }
-    ]
-  },
-  "variable": [
-    { "key": "access_token", "value": "" },
-    { "key": "book_id", "value": "" },
-    { "key": "loan_id", "value": "" }
   ]
 }
