@@ -1,9 +1,6 @@
-version: '3.9'
-
 services:
   web:
     build: .
-    command: python src/library/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -11,8 +8,14 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=library.settings.dev
       - DEBUG=True
+      - DATABASE_URL=postgres://library:librarypass@db:5432/library   # ← host=db (service name)
     depends_on:
       - db
+    command: >
+      sh -c "until nc -z db 5432; do echo 'Waiting for Postgres...'; sleep 2; done &&
+            echo 'Postgres is ready!' &&
+            python src/library/manage.py migrate &&
+            python src/library/manage.py runserver 0.0.0.0:8000"
 
   db:
     image: postgres:16-alpine
@@ -23,7 +26,7 @@ services:
       - POSTGRES_USER=library
       - POSTGRES_PASSWORD=librarypass
     ports:
-      - "5432:5432"
+      - "5432:5432"   # optional — only if you want to connect from host tools
 
 volumes:
   postgres_data:

@@ -1,23 +1,27 @@
-# Use slim Python image – smaller & secure
+# Use official Python slim image
 FROM python:3.14-slim
 
-# Set work dir
-WORKDIR /app
-
-# Install minimal system deps
+# Install minimal system dependencies + netcat for wait loop
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy & install requirements first (caching)
+# Set work directory
+WORKDIR /app
+
+# Upgrade pip
+RUN pip install --upgrade pip
+
+# Copy & install Python dependencies first (caching layer)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy entire project
 COPY . .
 
-# Expose Django port
+# Expose port
 EXPOSE 8000
 
-# Run development server (override with gunicorn in prod)
+# Default command (overridden in docker-compose for wait + migrate)
 CMD ["python", "src/library/manage.py", "runserver", "0.0.0.0:8000"]
