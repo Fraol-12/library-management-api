@@ -9,11 +9,14 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
-from pathlib import Path
-from dotenv import load_dotenv
 import os
 
+from datetime import timedelta
+from .base import *
+
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
@@ -24,12 +27,12 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -41,7 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'core.apps.CoreConfig',
+    "core.apps.CoreConfig",
 ]
 
 
@@ -50,35 +53,32 @@ INSTALLED_APPS = [
 # ────────────────────────────────────────────────
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',  # default: require login for everything
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",  # default: require login for everything
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
-    'NON_FIELD_ERRORS_KEY': 'detail',
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    "NON_FIELD_ERRORS_KEY": "detail",
 }
 
 # ────────────────────────────────────────────────
 # SIMPLE JWT SETTINGS
 # ────────────────────────────────────────────────
 
-from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),        # short-lived access token
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),           # longer refresh token
-    'ROTATE_REFRESH_TOKENS': True,                         # issue new refresh on refresh
-    'BLACKLIST_AFTER_ROTATION': True,                      # old refresh becomes invalid
-
-    'AUTH_HEADER_TYPES': ('Bearer',),                      # Authorization: Bearer <token>
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # short-lived access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # longer refresh token
+    "ROTATE_REFRESH_TOKENS": True,  # issue new refresh on refresh
+    "BLACKLIST_AFTER_ROTATION": True,  # old refresh becomes invalid
+    "AUTH_HEADER_TYPES": ("Bearer",),  # Authorization: Bearer <token>
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     # Optional: more secure signing (default is HS256)
-    'SIGNING_KEY': SECRET_KEY,                             # use Django secret for now
+    "SIGNING_KEY": SECRET_KEY,  # use Django secret for now
 }
 
 MIDDLEWARE = [
