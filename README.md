@@ -22,6 +22,15 @@ Professional, production-ready RESTful backend for managing a library system.
 
 ---
 
+**Key highlights that make this stand out:**
+- Strict domain rules enforced at multiple layers (DB constraints + app validation + transactions)
+- No double-borrowing, ownership enforcement on returns, max 5 active loans, overdue blocking
+- Public catalog + authenticated borrow/return + staff inventory management
+- JWT auth with public registration & auto-login tokens
+- Automated tests covering models, permissions, happy path & edge cases
+- Fully dockerized (Django + PostgreSQL) with one-command setup
+- Designed for real scalability, correctness, and maintainability
+
 ## Tech Stack
 
 - Python 3.11+  
@@ -172,5 +181,23 @@ Notes
     All endpoints tested end-to-end
 
     Portfolio-ready, production-grade backend
+
+    ## Lessons Learned & Architectural Tradeoffs
+
+    - **Derived state** (`is_available`, `is_overdue`) beats stored flags → no drift under concurrency
+    - **Partial unique constraint** + app-level validation = defense in depth (DB catches what code misses)
+    - **Atomic transactions** + double-checks in `perform_create` → prevent race conditions on borrow
+    - **JWT over opaque tokens** → stateless, scales horizontally, mobile-friendly, but requires refresh flow
+    - **Public registration** → great self-service UX, but would need rate limiting + email verification in production
+    - **SQLite local fallback** → fast dev iteration, but Postgres-ready via `DATABASE_URL` for real deployments
+    - **Docker + docker-compose** → reproducible setup for interviewers, staging, production
+
+    Future ideas (v2):
+    - Fine calculation on late returns
+    - Reservation queue
+    - Celery + email/SMS notifications
+    - Full-text search (Postgres trigram or Elasticsearch)
+    - Rate limiting (django-ratelimit)
+
 
     Made with ❤️ in Addis Ababa — Fraol M.
