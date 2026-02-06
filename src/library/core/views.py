@@ -14,6 +14,8 @@ from rest_framework.decorators import action
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.exceptions import PermissionDenied
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -135,25 +137,35 @@ class LoanViewSet(viewsets.ModelViewSet):
             return Loan.objects.all()
         return Loan.objects.filter(user=self.request.user)
 
-    @transaction.atomic
+
     def create(self, request, *args, **kwargs):
-        serializer = LoanCreateSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        book = serializer.validated_data['book']
-        due_date = serializer.validated_data['due_date']
-
-        if due_date <= timezone.now():
-            raise serializers.ValidationError({"due_date": "Due date must be in the future."})
-
-        if Loan.objects.filter(book=book, returned_at__isnull=True).exists():
-            raise serializers.ValidationError({"book": "This book is already borrowed."})
 
         loan = serializer.save(user=request.user)
 
-        # ✅ IMPORTANT: respond with READ serializer
-        read_serializer = LoanDetailSerializer(loan)
-        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+        response_serializer = LoanDetailSerializer(
+            loan,
+            context={'request': request}
+        )
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            book = serializer.validated_data['book']
+            due_date = serializer.validated_data['due_date']
+
+            if due_date <= timezone.now():
+                raise DRFValidationError({"due_date": "Due date must be in the future."})
+
+            if Loan.objects.filter(book=book, returned_at__isnull=True).exists():
+                raise DRFValidationError({"book": "This book is already borrowed."})
+
+            serializer.save(user=self.request.user)
 
 
     @action(detail=True, methods=['patch'], permission_classes=[IsBorrowerOrAdminForLoan], url_path='return')
@@ -162,16 +174,24 @@ class LoanViewSet(viewsets.ModelViewSet):
         loan = self.get_object()
 
         if loan.returned_at is not None:
-            return Response(
+            raise DRFValidationError(
                 {"detail": "This book is already returned."},
-                status=status.HTTP_400_BAD_REQUEST
             )
         if not (request.user == loan.user or request.user.is_staff):
-            return Response(
+            raise DRFValidationError(
                 {"detail": "You can only return your own books (or be staff)."},
-                status=status.HTTP_403_FORBIDDEN
             )
         loan.returned_at = timezone.now()
         loan.save()
 
-        return Response(LoanDetailSerializer(loan).data)
+        return Response(LoanDetailSerializer(loan).data) 
+
+
+    @action(detail=False, methods=['get'], url_path='my-active')
+    def my_active(self, request):
+        loans = Loan.objects.filter(
+            user=request.user,
+            returned_at__isnull=True
+        )
+        serializer = LoanDetailSerializer(loans, many=True)
+        return Response(serializer.data)
