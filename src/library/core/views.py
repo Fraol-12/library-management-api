@@ -153,26 +153,51 @@ class LoanViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        loan = serializer.save(user=request.user)
+        # Call perform_create to enforce max_loans & overdue rules
+        self.perform_create(serializer)
+        # Get the saved loan object
+        loan = serializer.instance
+
+
 
         response_serializer = LoanDetailSerializer(loan, context={"request": request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     @transaction.atomic
     def perform_create(self, serializer):
-        with transaction.atomic():
-            book = serializer.validated_data["book"]
-            due_date = serializer.validated_data["due_date"]
+        user = self.request.user
+        book = serializer.validated_data['book']
+        due_date = serializer.validated_data['due_date']
 
-            if due_date <= timezone.now():
-                raise DRFValidationError(
-                    {"due_date": "Due date must be in the future."}
-                )
+        # Rule A: Block borrow if overdue loans exist
+        overdue = Loan.objects.filter(
+            user=user,
+            returned_at__isnull=True,
+            due_date__lt=timezone.now()
+        ).exists()
+        if overdue:
+            raise DRFValidationError({
+                "detail": "You have overdue loans. Return them first or contact staff."
+            })
 
-            if Loan.objects.filter(book=book, returned_at__isnull=True).exists():
-                raise DRFValidationError({"book": "This book is already borrowed."})
+        # Rule B: Max active loans
+        max_loans = 5
+        active_count = Loan.objects.filter(user=user, returned_at__isnull=True).count()
+        if active_count >= max_loans:
+            raise DRFValidationError({
+                "detail": f"You can borrow at most {max_loans} books at a time. Return some first."
+            })
 
-            serializer.save(user=self.request.user)
+        # Existing rules
+        if due_date <= timezone.now():
+            raise DRFValidationError({"due_date": "Due date must be in the future."})
+
+        if Loan.objects.filter(book=book, returned_at__isnull=True).exists():
+            raise DRFValidationError({"book": "This book is already borrowed."})
+
+        # Save loan
+        serializer.save(user=user)
+
 
     @action(
         detail=True,

@@ -86,7 +86,7 @@ class LoanDetailSerializer(serializers.ModelSerializer):
 
     book = BookSerializer(read_only=True)
     is_overdue = serializers.BooleanField(read_only=True)
-    user = serializers.PrimaryKeyRelatedField(
+    user = serializers.StringRelatedField(
         read_only=True
     )  # or serializers.StringRelatedField() for username
 

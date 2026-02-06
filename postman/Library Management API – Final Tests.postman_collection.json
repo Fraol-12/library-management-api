@@ -1,0 +1,278 @@
+{
+  "info": {
+    "_postman_id": "1e7bd711-13d6-4979-aff6-1c35b6b2c0eb",
+    "name": "Library Management API – Final Tests (Fixed)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48970502"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_user\",\n  \"email\": \"test_user@example.com\",\n  \"password\": \"testpass123\",\n  \"password2\": \"testpass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/register/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_user\",\n  \"password\": \"testpass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/token/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","token"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Save access_token to environment",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('access_token', data.access);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "List All Books",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/books/?available=true",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","books"],
+              "query": [{ "key": "available", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "Create Book (Staff only)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"New Book\", \"author\": \"Author Name\", \"isbn\": \"1234567890123\" }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/books/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","books"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-save book_id to environment",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('book_id', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retrieve Book Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/books/{{book_id}}/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","books","{{book_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Book (Staff only)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"Updated Title\" }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/books/{{book_id}}/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","books","{{book_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Book (Staff only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/books/{{book_id}}/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","books","{{book_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loans",
+      "item": [
+        {
+          "name": "Borrow a Book",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"book\": {{book_id}}, \"due_date\": \"YYYY-MM-DD\" }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/loans/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","loans"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-save loan_id to environment",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('loan_id', data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Active Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/loans/my-active/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","loans","my-active"]
+            }
+          }
+        },
+        {
+          "name": "Return a Book",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/loans/{{loan_id}}/return/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","loans","{{loan_id}}","return"]
+            }
+          }
+        },
+        {
+          "name": "List All Loans (Staff only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/loans/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","loans"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users / Profile",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/me/",
+              "protocol": "http",
+              "host": ["127","0","0","1"],
+              "port": "8000",
+              "path": ["api","me"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "access_token", "value": "" },
+    { "key": "book_id", "value": "" },
+    { "key": "loan_id", "value": "" }
+  ]
+}
