@@ -100,7 +100,7 @@ python src/library/manage.py runserver
 
 ### **6️⃣ Authentication Flow**
 
-```markdown
+```
 ## 🔑 Authentication Flow
 
 | Action         | Endpoint            | Description                                  |
