@@ -20,8 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy entire project
 COPY . .
 
-# Expose port
+# Expose port (Render sets $PORT dynamically)
 EXPOSE 8000
 
-# Default command (overridden in docker-compose for wait + migrate)
-CMD ["python", "src/library/manage.py", "runserver", "0.0.0.0:8000"]
+# Run migrations first, then start server on Render's assigned port
+CMD python src/library/manage.py migrate && python src/library/manage.py runserver 0.0.0.0:$PORT
