@@ -6,71 +6,71 @@ Professional, production-ready RESTful backend for managing a library system.
 > Designed with real-world integrity rules: no double-borrowing, ownership enforcement on returns, derived availability flags, and overdue blocking.
 
 ---
+## 🌐 Live API
 
-**Live API (Deployed on Render free tier)**  
-https://library-management-api-ym28.onrender.com
+Deployed on Render (free tier):
 
-- First request may take 10–30 seconds (free-tier cold start after inactivity)  
-- Public endpoints: `/api/books/`, `/api/register/`  
-- Authenticated endpoints require Bearer token (from `/api/token/`)  
-- Test with Postman: import the included collection (`postman/Library Management API – Final Tests.postman_collection.json`)
+[Library Management API](https://library-management-api-ym28.onrender.com)
 
-## Features
-
-- Public catalog browsing (search/filter by availability)  
-- JWT authentication with public registration + auto-login  
-- Borrow/return books with strict rules:  
-  - No double-borrowing  
-  - Borrower ownership enforcement  
-  - Overdue blocking  
-  - Maximum 5 active loans per user  
-- Staff-only book CRUD operations (create, update, delete)  
-- DB-level constraints + transactions ensure data integrity  
-- Derived state fields: `is_available`, `is_overdue` (always up-to-date)  
+**Notes:**
+- First request may take 10–30 seconds due to free-tier cold start.
+- Public endpoints: `/api/books/`, `/api/register/`
+- Authenticated endpoints require Bearer token (from `/api/token/`)
+- Test with Postman using included collection: `postman/Library Management API – Final Tests.postman_collection.json`
 
 ---
+## 🌟 Features
 
-**Key highlights that make this stand out:**
-- Strict domain rules enforced at multiple layers (DB constraints + app validation + transactions)
-- No double-borrowing, ownership enforcement on returns, max 5 active loans, overdue blocking
-- Public catalog + authenticated borrow/return + staff inventory management
-- JWT auth with public registration & auto-login tokens
-- Automated tests covering models, permissions, happy path & edge cases
-- Fully dockerized (Django + PostgreSQL) with one-command setup
-- Designed for real scalability, correctness, and maintainability
+### Public Features
+- Browse library catalog with search and filter by availability
+- JWT authentication with public registration and auto-login
 
-**Note on root path (/)**  
-GET / returns 404 — this is intentional.  
-This is a pure backend API; all functionality lives under `/api/`.  
-The root path is not meant to serve content.
+### Borrowing System
+- Borrow and return books with strict rules:
+  - No double-borrowing
+  - Borrower ownership enforcement
+  - Overdue blocking
+  - Maximum 5 active loans per user
 
-## Tech Stack
+### Staff Features
+- Staff-only book CRUD operations (create, update, delete)
+- Derived fields: `is_available` and `is_overdue` always up-to-date
 
-- Python 3.11+  
-- Django 6  
-- Django REST Framework  
-- djangorestframework-simplejwt (JWT auth)  
-- PostgreSQL (production-ready) / SQLite (local fallback)  
-- Docker & Docker Compose  
-- Black, Ruff, isort (formatting & linting)  
+### Technical Highlights
+- Domain rules enforced at multiple layers: DB constraints + app validation + atomic transactions
+- Automated tests covering models, permissions, and borrowing workflows
+- Fully Dockerized (Django + PostgreSQL) for reproducible setup
 
 ---
+## 🛠️ Technology Stack
 
-## Setup (Local Development)
+- Python 3.11+
+- Django 6
+- Django REST Framework (DRF)
+- JWT Authentication via `djangorestframework-simplejwt`
+- PostgreSQL (production) / SQLite (local fallback)
+- Docker & Docker Compose
+- Black, Ruff, isort (code formatting & linting)
+ 
 
-1. **Clone the repository**
+---
+## 🚀 Setup (Local Development)
+
+### 1. Clone the repository
 ```bash
 git clone <your-repo-url>
 cd library-management-api
 
-    Create virtual environment & install dependencies
+
+Create virtual environment & install dependencies
 
 python -m venv venv
 source venv/bin/activate   # Linux/Mac
-# venv\Scripts\activate     # Windows
+# venv\Scripts\activate    # Windows
 pip install -r requirements.txt
 
-    Start PostgreSQL via Docker (optional but recommended)
+
+Start PostgreSQL via Docker (optional but recommended)
 
 docker run --name library-postgres \
   -e POSTGRES_USER=library_user \
@@ -80,28 +80,38 @@ docker run --name library-postgres \
 
 export DATABASE_URL=postgres://library_user:library_pass@localhost:5432/library_db
 
-    Apply migrations
+
+Apply migrations
 
 python src/library/manage.py migrate
 
-    Create a superuser
+
+Create a superuser
 
 python src/library/manage.py createsuperuser
 
-    Run the development server
+
+Run the development server
 
 python src/library/manage.py runserver
 
-API base URL: http://127.0.0.1:8000
-Authentication Flow
-Action	Endpoint	Description
-Register	POST /api/register/	Creates user + returns access & refresh tokens
-Login	POST /api/token/	Obtain JWT access + refresh tokens
-Refresh	POST /api/token/refresh/	Refresh access token
-Current User	GET /api/me/	Requires Bearer token; returns current user info
 
-Example: Register User
+---
 
+### **6️⃣ Authentication Flow**
+
+```markdown
+## 🔑 Authentication Flow
+
+| Action         | Endpoint            | Description                                  |
+|----------------|------------------|----------------------------------------------|
+| Register       | POST /api/register/ | Creates user + returns access & refresh tokens |
+| Login          | POST /api/token/    | Obtain JWT access + refresh tokens           |
+| Refresh Token  | POST /api/token/refresh/ | Refresh access token                     |
+| Current User   | GET /api/me/       | Requires Bearer token; returns user info    |
+
+**Example: Register User**
+```json
 POST /api/register/
 {
   "username": "test_user",
@@ -110,38 +120,30 @@ POST /api/register/
   "password2": "testpass123"
 }
 
-Key Endpoints
-Endpoint	Method	Description	Auth
-/api/books/	GET	List all books (filter ?available=true)	None
-/api/books/<id>/	GET	Get book detail	None
-/api/books/	POST	Create new book	Staff only
-/api/books/<id>/	PATCH	Update book	Staff only
-/api/books/<id>/	DELETE	Delete book	Staff only
-/api/loans/	POST	Borrow a book	Authenticated user
-/api/loans/<id>/return/	PATCH	Return a borrowed book	Borrower or staff
-/api/loans/my-active/	GET	List user's active loans	Authenticated user
-Docker (Postgres + Django)
+---
+## 📌 Key Endpoints
+
+| Endpoint                  | Method | Description                          | Auth                     |
+|----------------------------|--------|--------------------------------------|--------------------------|
+| /api/books/               | GET    | List all books (filter `?available=true`) | None                     |
+| /api/books/<id>/          | GET    | Get book detail                       | None                     |
+| /api/books/               | POST   | Create new book                        | Staff only               |
+| /api/books/<id>/          | PATCH  | Update book                            | Staff only               |
+| /api/books/<id>/          | DELETE | Delete book                            | Staff only               |
+| /api/loans/               | POST   | Borrow a book                          | Authenticated user       |
+| /api/loans/<id>/return/   | PATCH  | Return a borrowed book                 | Borrower or Staff        |
+| /api/loans/my-active/     | GET    | List user's active loans               | Authenticated user       |
+
+
+---
+## 🐳 Docker (PostgreSQL + Django)
 
 Run everything with one command:
 
+```bash
 docker-compose up --build
 
-    API exposed at http://localhost:8000
-
-    PostgreSQL container auto-created
-
-    Migrations run automatically
-
-    Use superuser token to create books
-
-Optional production tweaks:
-
-    Replace Django dev server with Gunicorn in Dockerfile
-
-    Use environment variables (.env) for secrets
-
-    Enable SSL and connection pooling in production
-
+---
 ## Testing
 
 Run the full suite locally:
@@ -149,29 +151,8 @@ Run the full suite locally:
 ```bash
 pytest -v
 
-Coverage:
 
-    Models & constraints
-
-    Permissions
-
-    Borrow/return cycle
-
-    Overdue loan blocking
-
-Example overdue test snippet
-
-def test_borrow_blocked_if_overdue(self, setup):
-    user, _, book = setup
-    overdue_loan = Loan.objects.create(
-        user=user,
-        book=Book.objects.create(title="Old Book", author="Author X", isbn="9999999999999"),
-        due_date=timezone.now() - timedelta(days=1)
-    )
-    response = self.client.post("/api/loans/", {"book": book.id, "due_date": "2026-03-20"})
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "overdue" in str(response.data).lower()
-
+---
 Postman Collection
 
 Import this collection to Postman to test all endpoints:
@@ -184,34 +165,34 @@ Library Management API – Final Tests
 
     Automatically sets access_token for authenticated requests
 
-Notes
 
-    Zero hard-coded DB credentials — uses DATABASE_URL
+---
 
-    Local fallback to SQLite if env var not set
+### **10️⃣ Notes & Architecture**
 
-    Fully Dockerized — exact same setup as production
+```
+## 📝 Notes & Architectural Highlights
 
-    All endpoints tested end-to-end
+- Zero hard-coded DB credentials — uses `DATABASE_URL`
+- Local fallback to SQLite if environment variable not set
+- Fully Dockerized — exact same setup as production
+- All endpoints tested end-to-end
+- Portfolio-ready, production-grade backend
 
-    Portfolio-ready, production-grade backend
-
-    ## Lessons Learned & Architectural Tradeoffs
-
-    - **Derived state** (`is_available`, `is_overdue`) beats stored flags → no drift under concurrency
-    - **Partial unique constraint** + app-level validation = defense in depth (DB catches what code misses)
-    - **Atomic transactions** + double-checks in `perform_create` → prevent race conditions on borrow
-    - **JWT over opaque tokens** → stateless, scales horizontally, mobile-friendly, but requires refresh flow
-    - **Public registration** → great self-service UX, but would need rate limiting + email verification in production
-    - **SQLite local fallback** → fast dev iteration, but Postgres-ready via `DATABASE_URL` for real deployments
-    - **Docker + docker-compose** → reproducible setup for interviewers, staging, production
-
-    Future ideas (v2):
-    - Fine calculation on late returns
-    - Reservation queue
-    - Celery + email/SMS notifications
-    - Full-text search (Postgres trigram or Elasticsearch)
-    - Rate limiting (django-ratelimit)
+### Lessons Learned
+- Derived state fields (`is_available`, `is_overdue`) prevent data drift under concurrency
+- Partial unique constraints + app-level validation = defense in depth
+- Atomic transactions + double-checks in `perform_create` prevent race conditions
+- JWT authentication allows horizontal scaling and mobile-friendly API
+- Public registration improves UX, but would require rate limiting & email verification in production
+- SQLite fallback allows fast dev iteration; Postgres ready via `DATABASE_URL`
+- Docker + docker-compose ensures reproducible setup for interviewers, staging, production
 
 
-    Made with ❤️ in Addis Ababa — Fraol M.
+## 🚀 Future Improvements
+
+- Fine calculation on late returns
+- Reservation queue system
+- Celery + email/SMS notifications
+- Full-text search (Postgres trigram or Elasticsearch)
+- Rate limiting for public registration
