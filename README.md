@@ -166,10 +166,6 @@ Library Management API – Final Tests
     Automatically sets access_token for authenticated requests
 
 
----
-
-### **10️⃣ Notes & Architecture**
-
 ```
 ## 📝 Notes & Architectural Highlights
 
