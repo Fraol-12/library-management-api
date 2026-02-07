@@ -7,6 +7,14 @@ Professional, production-ready RESTful backend for managing a library system.
 
 ---
 
+**Live API (Deployed on Render free tier)**  
+https://library-management-api-ym28.onrender.com
+
+- First request may take 10–30 seconds (free-tier cold start after inactivity)  
+- Public endpoints: `/api/books/`, `/api/register/`  
+- Authenticated endpoints require Bearer token (from `/api/token/`)  
+- Test with Postman: import the included collection (`postman/Library Management API – Final Tests.postman_collection.json`)
+
 ## Features
 
 - Public catalog browsing (search/filter by availability)  
@@ -30,6 +38,11 @@ Professional, production-ready RESTful backend for managing a library system.
 - Automated tests covering models, permissions, happy path & edge cases
 - Fully dockerized (Django + PostgreSQL) with one-command setup
 - Designed for real scalability, correctness, and maintainability
+
+**Note on root path (/)**  
+GET / returns 404 — this is intentional.  
+This is a pure backend API; all functionality lives under `/api/`.  
+The root path is not meant to serve content.
 
 ## Tech Stack
 
@@ -129,10 +142,11 @@ Optional production tweaks:
 
     Enable SSL and connection pooling in production
 
-Testing
+## Testing
 
-Run all tests:
+Run the full suite locally:
 
+```bash
 pytest -v
 
 Coverage:
