@@ -88,8 +88,8 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -97,6 +97,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 
 ROOT_URLCONF = "library.urls"
@@ -169,13 +170,41 @@ USE_TZ = True
 STATIC_URL = "static/"
 print("DB PATH =", BASE_DIR / "data/db.sqlite3")
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
 
+# For development: allow all origins (remove in production!)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# For production: only allow specific origins
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+#     "http://127.0.0.1:5173",
+#     "https://your-frontend-domain.vercel.app",  # add later
+# ]
+
+# Allow credentials (cookies, auth headers)
 CORS_ALLOW_CREDENTIALS = True
 
-from corsheaders.defaults import default_headers
-CORS_ALLOW_HEADERS = list(default_headers) + [
+# Allow these methods (POST is needed for login/register)
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+# Allow these headers (important for Authorization: Bearer)
+CORS_ALLOW_HEADERS = [
+    "accept",
     "authorization",
+    "content-type",
+    "origin",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "https://library-management-api-ym28.onrender.com",
 ]
